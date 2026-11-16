@@ -85,9 +85,10 @@ server.listen(0, common.mustCall(() => {
     if (session) session.destroy();
     server.close();
     // The session must not let one undrained stream buffer every frame it was
-    // sent. Before the fix the readable buffer grew to totalFrames; with the fix
-    // the backpressure keeps it bounded well below half of that.
-    assert.ok(peakReadableLength < totalFrames / 2,
+    // sent. Without the fix the readable buffer fills the whole default stream
+    // window (65535 one-byte frames, since the peer never sends WINDOW_UPDATE);
+    // with the fix the backpressure keeps it bounded well below half of that.
+    assert.ok(peakReadableLength < 32768,
               `expected backpressure to bound readableLength, got ${peakReadableLength}`);
   }), 4000);
 }));
